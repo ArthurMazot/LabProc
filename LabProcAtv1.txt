@@ -1,145 +1,90 @@
+const uint8_t tab[16] = {
+    0x40, 0x79, 0x24, 0x30,
+    0x19, 0x12, 0x02, 0x58, 
+    0x00, 0x10, 0x08, 0x03, 
+    0x46, 0x21, 0x06, 0x0e
+};
+
+//======================================================//
 1)
-//nessa tabela o segmento "a" tem que estar no pino 6 e o segmento "g" no pino 0
-const uint8_t tab[16] = {0×01, 0×4F, 0×12, 0×06,  //0 1 2 3
-                         0×4C, 0×24, 0×20, 0×0F,  //4 5 6 7
-                         0x00, 0x04, 0x08, 0x60,  //8 9 a b
-                         0x31, 0x42, 0x30, 0x38}; //c d e f
 
-uint8_t i = 0;
-
-while(1){
-    if(GPIOC->IDR & (1<<13) != 0){
-        while(GPIOC->IDR & (1<<13) != 0);
-        GPIOA->ODR = tab[i++] << 6;
-        }
-    if(i > 15) i = 0;
+void display(int n){
+    GPIOA->ODR = tab[n] & 0b11 | tab[n] & 1 << 6;
+    GPIOB->ODR = tab[n] & 0xff;
 }
 
-//========================================//
+int count = 0;
+int ms = 0;
 
-2)
-//nessa tabela o segmento "a" tem que estar no pino 6 e o segmento "g" no pino 0
-const uint8_t tab[16] = {0×01, 0×4F, 0×12, 0×06,  //0 1 2 3
-                         0×4C, 0×24, 0×20, 0×0F,  //4 5 6 7
-                         0x00, 0x04, 0x08, 0x60,  //8 9 a b
-                         0x31, 0x42, 0x30, 0x38}; //c d e f
-
-uint8_t i = 0;
-uint8_t p = 0; //0 = progressivo, 1 = regressivo
-
+display(0);
 while(1){
-    if(GPIOC->IDR & (1<<13) != 0){
-        while(GPIOC->IDR & (1<<13) != 0);
-        p = !p;
-        }
-    if(p == 0) i++;
-    else i--;
-    if(i < 0) i = 15; 
-    if(i > 15) i = 0;
-    GPIOA->ODR = tab[i] << 6;
-    HAL_Delay(1000);
-}
+    if(count > 15) count = 0;
+    if(ms > 199) ms = 0;
 
-//========================================//
-
-3)
-//nessa tabela o segmento "a" tem que estar no pino 6 e o segmento "g" no pino 0
-const uint8_t tab[16] = {0×01, 0×4F, 0×12, 0×06,  //0 1 2 3
-                         0×4C, 0×24, 0×20, 0×0F,  //4 5 6 7
-                         0x00, 0x04, 0x08, 0x60,  //8 9 a b
-                         0x31, 0x42, 0x30, 0x38}; //c d e f
-
-uint8_t i = 0;
-uint8_t count = 0;
-
-while(1){
-    if(GPIOC->IDR & (1<<13) != 0){
-        GPIOA->ODR = tab[i] << 6;
-        HAL_Delay(1000);
-        }
+    if((GPIOA->IDR & (1<<9)) == 0) ciclo();
     else{
-        While(count++ < 333){
-        GPIOA->ODR = tab[i] << 6;
-        HAL_Delay(1);
-        GPIOA->ODR = 0x7f << 6;
+        display(count);
         HAL_Delay(2);
-        }
-        count = 0;
-        HAL_Delay(1);
-            }
-    if(i > 15) i = 0;
+    }
+
+    if(ms == 199) count++;
+    else ms++;
 }
 
-//========================================//
+//======================================================//
+2)
 
-4)
-//nessa tabela o segmento "a" tem que estar no pino 6 e o segmento "g" no pino 0
-const uint8_t tab[16] = {0×01, 0×4F, 0×12, 0×06,  //0 1 2 3
-                         0×4C, 0×24, 0×20, 0×0F,  //4 5 6 7
-                         0x00, 0x04, 0x08, 0x60,  //8 9 a b
-                         0x31, 0x42, 0x30, 0x38}; //c d e f
+int uni = 0, dez = 0, cen = 0;
+int count = 0;
 
-uint8_t ret = 0;
-uint8_t count = 0;
-
-uint8_t verificaBotao(void){
-	uint8_t check = 0;
-	while(GPIOC->IDR & (1<<13) != 0 && check < 1000){
-		check++;
-		HAL_Delay(1);
-		}
-	return (check == 0) ? 0 : (check < 1000) ? 1 : 2;
+void display(int n){
+    GPIOA->ODR = tab[n] & 1<<3 | tab[n] & (0x7 << 7);
+    GPIOB->ODR = tab[n] & 1 | tab[n] & (0x3 << 3);
 }
 
+void ciclo(){
+    display(cen);
+    GPIOB->BRR = 1 << 15;
+    GPIOB->BSRR = 1 << 13;
+    HAL_Delay(1);
+    display(dez);
+    GPIOB->BRR = 1 << 13;
+    GPIOB->BSRR = 1 << 14;
+    HAL_Delay(1);
+    display(uni);
+    GPIOB->BRR = 1 << 14;
+    GPIOB->BSRR = 1 << 15;
+    HAL_Delay(1);
+}
+
+void check(){
+    if(uni < 0){
+        uni = 15;
+        dez--;}
+    if(uni > 15){
+        uni = 0;
+        dez++;}
+
+    if(dez < 0){
+        dez = 15;
+        cen--;}
+    if(dez > 15){
+        dez = 0;
+        cen++;}
+
+    if(cen < 0) cen = 15;
+    if(cen > 15) cen = 0;
+}
+
+display(0);
 while(1){
-   	ret = verificaBotao();
-    if(ret == 1){
-        GPIOA->ODR = tab[1] << 6;
-        GPIOA->ODR |= 1 << x; // colocar um pino pro x
-        HAL_Delay(500);
-    }
-    else if(ret == 2){
-        GPIOA->ODR = tab[2] << 6;
-        GPIOA->ODR |= 1 << y; // colocar um pino pro y
-        HAL_Delay(500);
-    }
-    else{
-        GPIOA->ODR = 0x7f;
-        GPIOA->BSRR = 1 << (x + 16);
-        GPIOA->BSRR = 1 << (y + 16);
-    }
+    check();
+    ciclo();
+
+    if(count == 3){
+        if(GPIOB->IDR & 1<<10 == 0) uni++;
+        else uni--;
+        count = 0;}
+    else count++;
 }
 
-//========================================//
-
-5)
-//nessa tabela o segmento "a" tem que estar no pino 6 e o segmento "g" no pino 0
-const uint8_t tab[16] = {0×01, 0×4F, 0×12, 0×06,  //0 1 2 3
-                         0×4C, 0×24, 0×20, 0×0F,  //4 5 6 7
-                         0x00, 0x04, 0x08, 0x60,  //8 9 a b
-                         0x31, 0x42, 0x30, 0x38}; //c d e f
-
-uint8_t ret = 0;
-uint8_t i = 0;
-uint8_t count = 0;
-
-uint8_t verificaBotao(void){
-	uint8_t check = 0;
-	while(GPIOC->IDR & (1<<13) != 0 && check < 1000){
-		check++;
-		HAL_Delay(1);
-		}
-	return (check == 0) ? 0 : (check < 1000) ? 1 : 2;
-}
-
-while(1){
-   	ret = verificaBotao();
-    if(ret == 1){
-        i++;
-    }
-    else if(ret == 2){
-        i = 0;
-    }
-    if(i > 15) i = 0;
-    GPIOA->ODR = tab[i] << 6;
-}
