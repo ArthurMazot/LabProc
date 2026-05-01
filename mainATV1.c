@@ -61,7 +61,7 @@ void ciclo(){
     HAL_Delay(1);
     GPIOA->ODR = 0xff;
     GPIOB->ODR = 0xff;
-    HAL_Delay(3);
+    HAL_Delay(1);
 }
 
 /* USER CODE END PV */
@@ -114,18 +114,15 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  if(count > 15) count = 0;
-
-	  	  	      if((GPIOB->IDR & (1<<5)) == 0){
-	  	  	    	  for(int i = 0; i < 200; i++)
-	  	  	    			  ciclo();}
-	  	  	      else{
-	  	  	          display(count);
-	  	  	       HAL_Delay(400);
+  while (1){
+	if(count > 15) count = 0;
+	if((GPIOB->IDR & (1<<5)) == 0)
+	  	for(int i = 0; i < 200; i++)
+	  		ciclo();
+	  	else{
+	  	  	display(count);
+	  	  	HAL_Delay(400);
 	  	  	}
-
 	  count++;}
     /* USER CODE END WHILE */
 
