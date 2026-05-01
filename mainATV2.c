@@ -52,23 +52,23 @@ int uni = 0, dez = 0, cen = 0;
 int count = 0;
 
 void display(int n){
-    GPIOA->ODR = ((tab[n] & 1) << 3) | ((tab[n] & 7 << 1) << 6);
-    GPIOB->ODR = ((tab[n] & 1 << 4) >> 4) | ((tab[n] & 3 << 5) >> 4);
+    GPIOA->ODR = ((tab[n] & 1) << 1) | ((tab[n] & 1 << 1) << 3) | ((tab[n] & 3 << 2) << 8);
+    GPIOB->ODR = ((tab[n] & 1 << 4) >> 1) | ((tab[n] & 3 << 5));
 }
 
 void ciclo(){
     display(cen);
-    GPIOB->BRR = 1 << 15;
-    GPIOB->BSRR = 1 << 13;
-    HAL_Delay(1);
+    GPIOB->BRR = 1 << 10;
+    GPIOB->BSRR = 1 << 8;
+    HAL_Delay(3);
     display(dez);
-    GPIOB->BRR = 1 << 13;
-    GPIOB->BSRR = 1 << 14;
-    HAL_Delay(1);
+    GPIOB->BRR = 1 << 8;
+    GPIOB->BSRR = 1 << 9;
+    HAL_Delay(3);
     display(uni);
-    GPIOB->BRR = 1 << 14;
-    GPIOB->BSRR = 1 << 15;
-    HAL_Delay(1);
+    GPIOB->BRR = 1 << 9;
+    GPIOB->BSRR = 1 << 10;
+    HAL_Delay(3);
 }
 
 void check(){
@@ -137,16 +137,11 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-	  check();
-	  ciclo();
-
-	   if(count == 3){
-		   if((GPIOB->IDR & 1<<10) != 0) uni++;
-		   else uni--;
-		   count = 0;}
-	   else count++;
+  while (1){
+	check();
+	ciclo();
+	if((GPIOB->IDR & 1<<14) == 0) uni++;
+	else uni--;
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
